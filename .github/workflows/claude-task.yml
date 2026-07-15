@@ -1,0 +1,38 @@
+name: Claude Code Task (via 掌舵台 Helm)
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Task for Claude Code"
+        required: true
+        type: string
+      branch:
+        description: "Branch name for the resulting PR"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  claude-task:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ github.event.inputs.prompt }}
+
+      - name: 把 Claude 的改动开成 PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "🤖 Claude Code：掌舵台派工"
+          title: "🤖 Claude Code 自动开发（掌舵台派工）"
+          body: |
+            这个 PR 由掌舵台通过 GitHub Actions 触发 Claude Code 自动生成，请审查代码改动，确认无误后合并。
+          branch: ${{ github.event.inputs.branch }}
